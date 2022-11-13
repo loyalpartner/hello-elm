@@ -4,7 +4,7 @@ import Browser
 import Html exposing (..)
 import Html.Attributes exposing (height, width)
 import Svg exposing (Svg, circle, line, svg)
-import Svg.Attributes exposing (cx, cy, fill, r, stroke, strokeLinecap, strokeWidth, viewBox, x1, x2, y1, y2)
+import Svg.Attributes as A exposing (cx, cy, fill, r, stroke, strokeLinecap, strokeWidth, viewBox, x1, x2, y1, y2)
 import Task
 import Time
 
@@ -96,27 +96,75 @@ view model =
         , width 400
         , height 400
         ]
-        [ circle [ cx "200", cy "200", r "120", fill "#1293d8" ] []
-        , viewHandle 6 60 (hour / 12)
-        , viewHandle 6 90 (minute / 60)
-        , viewHandle 3 90 (second / 60)
-        ]
+        ([ circle [ cx "200", cy "200", r "120", fill "#1293d8" ] []
+         , viewHandle 6 60 (hour / 12)
+         , viewHandle 6 90 (minute / 60)
+         , viewHandle 1 90 (Debug.log "second" second / 60)
+         ]
+            -- ++ List.map viewDot (List.range 1 60)
+            ++ List.map viewNumber (List.range 1 12)
+        )
+
+
+viewDot : Int -> Svg msg
+viewDot n =
+    let
+        angleInTurns =
+            toFloat n / 60
+
+        x =
+            String.fromFloat (200 + 120 * sin (turns angleInTurns))
+
+        y =
+            String.fromFloat (200 - 120 * cos (turns angleInTurns))
+
+        ( width, color ) =
+            if modBy 15 n == 0 then
+                ( "3", "yellow" )
+
+            else if modBy 5 n == 0 then
+                ( "2", "green" )
+
+            else
+                ( "1", "red" )
+    in
+    circle
+        [ cx x, cy y, r width, fill color ]
+        []
+
+
+viewNumber : Int -> Svg msg
+viewNumber n =
+    let
+        angleInTurns =
+            toFloat n / 12
+
+        length =
+            110
+
+        x =
+            String.fromFloat (200 + length * sin (turns angleInTurns) - 5)
+
+        y =
+            String.fromFloat (200 - length * cos (turns angleInTurns) + 5)
+    in
+    Svg.text_ [ A.x x, A.y y, fill "red" ] [ Svg.text (String.fromInt n) ]
 
 
 viewHandle : Int -> Float -> Float -> Svg msg
 viewHandle width length angleInTurns =
     let
         x =
-            200 + length * sin (turns angleInTurns)
+            String.fromFloat (200 + length * sin (turns angleInTurns))
 
         y =
-            200 - length * cos (turns angleInTurns)
+            String.fromFloat (200 - length * cos (turns angleInTurns))
     in
     line
         [ x1 "200"
         , y1 "200"
-        , x2 (String.fromFloat x)
-        , y2 (String.fromFloat y)
+        , x2 x
+        , y2 y
         , stroke "white"
         , strokeWidth (String.fromInt width)
         , strokeLinecap "round"
